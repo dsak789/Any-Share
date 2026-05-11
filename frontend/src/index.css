@@ -1,0 +1,40 @@
+/* ── Reset & Base ─────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #0b0b0b;
+  --surface:     #141414;
+  --surface2:    #1e1e1e;
+  --border:      #2a2a2a;
+  --border-hi:   #3d3d3d;
+  --accent:      #e8ff47;
+  --accent-dim:  #b8cc2a;
+  --text:        #f0f0f0;
+  --text-mid:    #888;
+  --text-low:    #444;
+  --red:         #ff4d4d;
+  --green:       #47ffb0;
+  --radius:      4px;
+  --mono:        "Space Mono", monospace;
+  --sans:        "DM Sans", sans-serif;
+}
+
+html { font-size: 16px; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-weight: 400;
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+
+/* ── Selection ─────────────────────────────────────────────────────────────── */
+::selection { background: var(--accent); color: #000; }

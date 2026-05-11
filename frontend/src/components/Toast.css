@@ -1,0 +1,37 @@
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 12px 20px;
+  border-radius: var(--radius);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  z-index: 9999;
+  animation: slide-in 0.2s ease;
+  max-width: 360px;
+}
+
+.toast-success {
+  background: var(--surface2);
+  border: 1px solid var(--green);
+  color: var(--green);
+}
+
+.toast-error {
+  background: var(--surface2);
+  border: 1px solid var(--red);
+  color: var(--red);
+}
+
+.toast-info {
+  background: var(--surface2);
+  border: 1px solid var(--border-hi);
+  color: var(--text-mid);
+}
+
+@keyframes slide-in {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
