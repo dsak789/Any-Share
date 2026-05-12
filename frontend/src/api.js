@@ -9,7 +9,7 @@ export const saveToken = (t) => localStorage.setItem(TOKEN_KEY, t);
 export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
 // Axios instance — attaches token automatically to every request
-const api = axios.create({ baseURL: "/api" });
+const api = axios.create({ baseURL: "http://server.dsak.in:5000/api" });
 
 api.interceptors.request.use((config) => {
   const token = getToken();
@@ -44,5 +44,5 @@ export const uploadFiles = (files, onProgress) => {
 
 export const listFiles = () => api.get("/files");
 export const deleteFile = (id) => api.delete(`/files/${id}`);
-export const downloadUrl = (id) => `http://localhost:5000/api/download/${id}`;
+export const downloadUrl = (id) => `http://server.dsak.in:5000/api/download/${id}`;
 export const getSystemInfo = () => api.get("/system");
