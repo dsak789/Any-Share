@@ -16,7 +16,12 @@ const AUTH_PASSWORD = process.env.VAULT_PASSWORD || "changeme123";
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 // ── Middleware ──────────────────────────────────────────────────────────────
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "https://myvault789.vercel.app"],
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
 // ── Upload directory ────────────────────────────────────────────────────────
