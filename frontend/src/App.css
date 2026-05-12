@@ -51,7 +51,40 @@
   letter-spacing: 0.06em;
 }
 
-/* ── Main ──────────────────────────────────────────────────────────────────── */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--border-hi);
+  border-radius: var(--radius);
+  color: var(--text-mid);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.logout-btn:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.file-count {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text-low);
+  letter-spacing: 0.06em;
+}
 .app-main {
   flex: 1;
   max-width: 900px;

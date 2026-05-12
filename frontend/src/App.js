@@ -3,30 +3,55 @@ import "./App.css";
 import UploadZone from "./components/UploadZone";
 import FileList from "./components/FileList";
 import Toast from "./components/Toast";
-import { uploadFiles, listFiles, deleteFile } from "./api";
+import LoginScreen from "./components/LoginScreen";
+import { uploadFiles, listFiles, deleteFile, login, logout, checkMe } from "./api";
 
 export default function App() {
-  const [files, setFiles]         = useState([]);
+  const [authed,    setAuthed]   = useState(false);
+  const [authReady, setAuthReady] = useState(false);
+  const [files,     setFiles]    = useState([]);
   const [uploading, setUploading] = useState(false);
-  const [progress, setProgress]   = useState(0);
-  const [toast, setToast]         = useState(null);
-  const [loading, setLoading]     = useState(true);
+  const [progress,  setProgress] = useState(0);
+  const [toast,     setToast]    = useState(null);
+  const [loading,   setLoading]  = useState(true);
 
-  const showToast = (message, type = "info") =>
-    setToast({ message, type, key: Date.now() });
+  const showToast = useCallback((message, type = "info") =>
+    setToast({ message, type, key: Date.now() }), []); // stable — only setToast in deps
 
+  // Check existing token on mount
+  useEffect(() => {
+    checkMe()
+      .then(({ data }) => setAuthed(data.authenticated))
+      .catch(() => setAuthed(false))
+      .finally(() => setAuthReady(true));
+  }, []);
+
+  // fetchFiles is stable — no showToast reference inside useCallback deps
   const fetchFiles = useCallback(async () => {
     try {
       const { data } = await listFiles();
       setFiles(data.files);
     } catch {
-      showToast("Could not load files. Is the server running?", "error");
+      setToast({ message: "Could not load files. Is the server running?", type: "error", key: Date.now() });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // empty deps — setFiles and setToast are always stable
 
-  useEffect(() => { fetchFiles(); }, [fetchFiles]);
+  useEffect(() => {
+    if (authed) fetchFiles();
+  }, [authed, fetchFiles]);
+
+  const handleLogin = async (password) => {
+    await login(password);
+    setAuthed(true);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    setAuthed(false);
+    setFiles([]);
+  };
 
   const handleUpload = async (selected) => {
     setUploading(true);
@@ -54,24 +79,35 @@ export default function App() {
     }
   };
 
+  // Don't render anything until we've checked the session
+  if (!authReady) return null;
+
+  if (!authed) return <LoginScreen onLogin={handleLogin} />;
+
   return (
     <div className="app">
-      {/* Header */}
       <header className="app-header">
         <div className="header-inner">
           <div className="logo">
             <span className="logo-icon">▣</span>
             <span className="logo-text">VAULT</span>
           </div>
-          <div className="header-meta">
+          <div className="header-right">
             <span className="file-count">
               {loading ? "—" : files.length} file{files.length !== 1 ? "s" : ""}
             </span>
+            <button className="logout-btn" onClick={handleLogout} title="Logout">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              Logout
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Main */}
       <main className="app-main">
         <section className="section">
           <h2 className="section-label">Upload</h2>
@@ -106,12 +142,10 @@ export default function App() {
         </section>
       </main>
 
-      {/* Footer */}
       <footer className="app-footer">
-        <span>VAULT · File Storage · v1.0</span>
+        <span>VAULT · File Storage · v1.1</span>
       </footer>
 
-      {/* Toast */}
       {toast && (
         <Toast
           key={toast.key}

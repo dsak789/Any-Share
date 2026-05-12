@@ -1,6 +1,13 @@
 import axios from "axios";
 
-const api = axios.create({ baseURL: "/api" });
+const api = axios.create({
+  baseURL: "http://localhost:5000/api",
+  withCredentials: true, // send the session cookie on every request
+});
+
+export const login = (password) => api.post("/login", { password });
+export const logout = () => api.post("/logout");
+export const checkMe = () => api.get("/me");
 
 export const uploadFiles = (files, onProgress) => {
   const form = new FormData();
