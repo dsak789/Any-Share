@@ -4,19 +4,28 @@ import UploadZone from "./components/UploadZone";
 import FileList from "./components/FileList";
 import Toast from "./components/Toast";
 import LoginScreen from "./components/LoginScreen";
-import { uploadFiles, listFiles, deleteFile, login, logout, checkMe } from "./api";
+import {
+  uploadFiles,
+  listFiles,
+  deleteFile,
+  login,
+  logout,
+  checkMe,
+} from "./api";
 
 export default function App() {
-  const [authed,    setAuthed]   = useState(false);
+  const [authed, setAuthed] = useState(false);
   const [authReady, setAuthReady] = useState(false);
-  const [files,     setFiles]    = useState([]);
+  const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
-  const [progress,  setProgress] = useState(0);
-  const [toast,     setToast]    = useState(null);
-  const [loading,   setLoading]  = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [toast, setToast] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const showToast = useCallback((message, type = "info") =>
-    setToast({ message, type, key: Date.now() }), []); // stable — only setToast in deps
+  const showToast = useCallback(
+    (message, type = "info") => setToast({ message, type, key: Date.now() }),
+    [],
+  ); // stable — only setToast in deps
 
   // Check existing token on mount
   useEffect(() => {
@@ -32,7 +41,11 @@ export default function App() {
       const { data } = await listFiles();
       setFiles(data.files);
     } catch {
-      setToast({ message: "Could not load files. Is the server running?", type: "error", key: Date.now() });
+      setToast({
+        message: "Could not load files. Is the server running?",
+        type: "error",
+        key: Date.now(),
+      });
     } finally {
       setLoading(false);
     }
@@ -58,7 +71,10 @@ export default function App() {
     setProgress(0);
     try {
       await uploadFiles(selected, setProgress);
-      showToast(`${selected.length} file${selected.length > 1 ? "s" : ""} uploaded.`, "success");
+      showToast(
+        `${selected.length} file${selected.length > 1 ? "s" : ""} uploaded.`,
+        "success",
+      );
       await fetchFiles();
     } catch (err) {
       const msg = err.response?.data?.error || "Upload failed.";
@@ -90,17 +106,28 @@ export default function App() {
         <div className="header-inner">
           <div className="logo">
             <span className="logo-icon">▣</span>
-            <span className="logo-text">VAULT</span>
+            <span className="logo-text"> My VAULT</span>
           </div>
           <div className="header-right">
             <span className="file-count">
               {loading ? "—" : files.length} file{files.length !== 1 ? "s" : ""}
             </span>
-            <button className="logout-btn" onClick={handleLogout} title="Logout">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
+            <button
+              className="logout-btn"
+              onClick={handleLogout}
+              title="Logout"
+            >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
               </svg>
               Logout
             </button>
@@ -122,10 +149,21 @@ export default function App() {
           <h2 className="section-label">
             Stored Files
             {!loading && (
-              <button className="refresh-btn" onClick={fetchFiles} title="Refresh">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <polyline points="23 4 23 10 17 10"/>
-                  <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+              <button
+                className="refresh-btn"
+                onClick={fetchFiles}
+                title="Refresh"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <polyline points="23 4 23 10 17 10" />
+                  <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" />
                 </svg>
               </button>
             )}
@@ -143,7 +181,7 @@ export default function App() {
       </main>
 
       <footer className="app-footer">
-        <span>VAULT · File Storage · v1.1</span>
+        <span>My VAULT · v1.1 · File Storage · ©️ 2025 · DSAK </span>
       </footer>
 
       {toast && (
