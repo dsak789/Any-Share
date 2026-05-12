@@ -1,5 +1,5 @@
 {
-  "name": "file-storage-backend",
+  "name": "my-vault-api",
   "version": "1.0.0",
   "description": "File storage API built with Node.js and Express",
   "main": "server.js",
