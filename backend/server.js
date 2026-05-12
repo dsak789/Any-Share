@@ -6,28 +6,24 @@ const os = require("os");
 const { v4: uuidv4 } = require("uuid");
 const multer = require("multer");
 const crypto = require("crypto");
-const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ── Config ──────────────────────────────────────────────────────────────────
-// Change VAULT_PASSWORD before deploying (env var or edit default below)
 const AUTH_PASSWORD = process.env.VAULT_PASSWORD || "changeme123";
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 // ── Middleware ──────────────────────────────────────────────────────────────
 app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(express.json());
-app.use(cookieParser());
 
 // ── Upload directory ────────────────────────────────────────────────────────
 const UPLOADS_DIR = path.join(__dirname, "uploads");
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 // ── Metadata cache (JSON file on disk) ──────────────────────────────────────
-// Survives server restarts. Loaded once into memory; written on every mutation.
 const META_FILE = path.join(__dirname, "metadata.json");
 
 function loadMetadata() {
@@ -35,7 +31,7 @@ function loadMetadata() {
     if (fs.existsSync(META_FILE))
       return JSON.parse(fs.readFileSync(META_FILE, "utf8"));
   } catch (e) {
-    console.warn("⚠  Could not read metadata.json, starting fresh:", e.message);
+    console.warn("Could not read metadata.json:", e.message);
   }
   return {};
 }
@@ -44,7 +40,7 @@ function saveMetadata() {
   try {
     fs.writeFileSync(META_FILE, JSON.stringify(fileMetadata, null, 2));
   } catch (e) {
-    console.error("❌ Failed to persist metadata:", e.message);
+    console.error("Failed to persist metadata:", e.message);
   }
 }
 
@@ -53,13 +49,12 @@ const fileMetadata = loadMetadata();
 // Purge orphaned metadata on startup
 Object.keys(fileMetadata).forEach((id) => {
   if (!fs.existsSync(path.join(UPLOADS_DIR, fileMetadata[id].storedName))) {
-    console.log(`🧹 Purging stale entry: ${id}`);
     delete fileMetadata[id];
   }
 });
 saveMetadata();
 
-// ── Session store (in-memory) ────────────────────────────────────────────────
+// ── Session store ────────────────────────────────────────────────────────────
 const sessions = {};
 
 function createSession() {
@@ -79,107 +74,30 @@ function isValidSession(token) {
 
 // ── Auth middleware ──────────────────────────────────────────────────────────
 function requireAuth(req, res, next) {
-  if (isValidSession(req.cookies?.vault_session)) return next();
+  const header = req.headers["authorization"] || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+  if (isValidSession(token)) return next();
   res.status(401).json({ error: "Unauthorized." });
 }
 
 // ── Public auth routes ───────────────────────────────────────────────────────
-
 app.post("/api/login", (req, res) => {
   if (!req.body.password || req.body.password !== AUTH_PASSWORD)
     return res.status(401).json({ error: "Wrong password." });
-
-  const token = createSession();
-  res
-    .cookie("vault_session", token, {
-      httpOnly: true,
-      sameSite: "lax",
-      maxAge: SESSION_TTL_MS,
-      // secure: true,  // uncomment when serving over HTTPS
-    })
-    .json({ message: "Logged in." });
+  res.json({ token: createSession() });
 });
 
 app.post("/api/logout", (req, res) => {
-  const token = req.cookies?.vault_session;
+  const header = req.headers["authorization"] || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
   if (token) delete sessions[token];
-  res.clearCookie("vault_session").json({ message: "Logged out." });
+  res.json({ message: "Logged out." });
 });
 
-// Frontend calls this on load to check if the cookie is still valid
 app.get("/api/me", (req, res) => {
-  res.json({ authenticated: isValidSession(req.cookies?.vault_session) });
-});
-
-// ── Multer ───────────────────────────────────────────────────────────────────
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${uuidv4()}${ext}`);
-  },
-});
-
-const upload = multer({ storage, limits: { fileSize: 100 * 1024 * 1024 } });
-
-// ── Protected routes ─────────────────────────────────────────────────────────
-
-app.post("/api/upload", requireAuth, upload.array("files", 20), (req, res) => {
-  if (!req.files?.length)
-    return res.status(400).json({ error: "No files provided." });
-
-  const uploaded = req.files.map((f) => {
-    const id = path.basename(f.filename, path.extname(f.filename));
-    const meta = {
-      id,
-      originalName: f.originalname,
-      storedName: f.filename,
-      size: f.size,
-      mimeType: f.mimetype,
-      uploadedAt: new Date().toISOString(),
-    };
-    fileMetadata[id] = meta;
-    return meta;
-  });
-
-  saveMetadata();
-  res.status(201).json({ message: "Upload successful.", files: uploaded });
-});
-
-app.get("/api/files", requireAuth, (_req, res) => {
-  const files = Object.values(fileMetadata).sort(
-    (a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt),
-  );
-  res.json({ files });
-});
-
-app.get("/api/files/:id", requireAuth, (req, res) => {
-  const meta = fileMetadata[req.params.id];
-  if (!meta) return res.status(404).json({ error: "File not found." });
-  res.json(meta);
-});
-
-app.get("/api/download/:id", requireAuth, (req, res) => {
-  const meta = fileMetadata[req.params.id];
-  if (!meta) return res.status(404).json({ error: "File not found." });
-  const filePath = path.join(UPLOADS_DIR, meta.storedName);
-  if (!fs.existsSync(filePath))
-    return res.status(404).json({ error: "File missing from disk." });
-  res.download(filePath, meta.originalName);
-});
-
-app.delete("/api/files/:id", requireAuth, (req, res) => {
-  const meta = fileMetadata[req.params.id];
-  if (!meta) return res.status(404).json({ error: "File not found." });
-  const filePath = path.join(UPLOADS_DIR, meta.storedName);
-  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-  delete fileMetadata[req.params.id];
-  saveMetadata();
-  res.json({ message: "File deleted." });
-});
-
-app.get("/", (req, res) => {
-  res.status(200).json("My Vault API");
+  const header = req.headers["authorization"] || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+  res.json({ authenticated: isValidSession(token) });
 });
 
 // ── System info route ────────────────────────────────────────────────────────
@@ -241,7 +159,75 @@ app.get("/api/system", requireAuth, (_req, res) => {
   });
 });
 
-// ── Start ───────────────────────────────────────────────────────────────────
+// ── Multer ───────────────────────────────────────────────────────────────────
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `${uuidv4()}${ext}`);
+  },
+});
+const upload = multer({ storage, limits: { fileSize: 100 * 1024 * 1024 } });
+
+// ── Protected file routes ─────────────────────────────────────────────────────
+app.post("/api/upload", requireAuth, upload.array("files", 20), (req, res) => {
+  if (!req.files?.length)
+    return res.status(400).json({ error: "No files provided." });
+
+  const uploaded = req.files.map((f) => {
+    const id = path.basename(f.filename, path.extname(f.filename));
+    const meta = {
+      id,
+      originalName: f.originalname,
+      storedName: f.filename,
+      size: f.size,
+      mimeType: f.mimetype,
+      uploadedAt: new Date().toISOString(),
+    };
+    fileMetadata[id] = meta;
+    return meta;
+  });
+  saveMetadata();
+  res.status(201).json({ message: "Upload successful.", files: uploaded });
+});
+
+app.get("/api/files", requireAuth, (_req, res) => {
+  const files = Object.values(fileMetadata).sort(
+    (a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt),
+  );
+  res.json({ files });
+});
+
+app.get("/api/files/:id", requireAuth, (req, res) => {
+  const meta = fileMetadata[req.params.id];
+  if (!meta) return res.status(404).json({ error: "File not found." });
+  res.json(meta);
+});
+
+app.get("/api/download/:id", requireAuth, (req, res) => {
+  const meta = fileMetadata[req.params.id];
+  if (!meta) return res.status(404).json({ error: "File not found." });
+  const filePath = path.join(UPLOADS_DIR, meta.storedName);
+  if (!fs.existsSync(filePath))
+    return res.status(404).json({ error: "File missing from disk." });
+  res.download(filePath, meta.originalName);
+});
+
+app.delete("/api/files/:id", requireAuth, (req, res) => {
+  const meta = fileMetadata[req.params.id];
+  if (!meta) return res.status(404).json({ error: "File not found." });
+  const filePath = path.join(UPLOADS_DIR, meta.storedName);
+  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  delete fileMetadata[req.params.id];
+  saveMetadata();
+  res.json({ message: "File deleted." });
+});
+
+app.get("/", (req, res) => {
+  res.status(200).json("My Vault API");
+});
+
+// ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`🗄  Vault API  →  http://localhost:${PORT}`);
   console.log(`🔑  Password  →  ${AUTH_PASSWORD}`);

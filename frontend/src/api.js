@@ -1,14 +1,36 @@
 import axios from "axios";
 
-const api = axios.create({
-  baseURL: "http://localhost:5000/api",
-  withCredentials: true, // send the session cookie on every request
+// Token is stored in localStorage so it survives page refreshes.
+// Key used to read/write it:
+const TOKEN_KEY = "vault_token";
+
+export const getToken = () => localStorage.getItem(TOKEN_KEY);
+export const saveToken = (t) => localStorage.setItem(TOKEN_KEY, t);
+export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
+
+// Axios instance — attaches token automatically to every request
+const api = axios.create({ baseURL: "/api" });
+
+api.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) config.headers["Authorization"] = `Bearer ${token}`;
+  return config;
 });
 
-export const login = (password) => api.post("/login", { password });
-export const logout = () => api.post("/logout");
+// ── Auth ─────────────────────────────────────────────────────────────────────
+export const login = async (password) => {
+  const { data } = await api.post("/login", { password });
+  saveToken(data.token);
+};
+
+export const logout = async () => {
+  await api.post("/logout").catch(() => {});
+  clearToken();
+};
+
 export const checkMe = () => api.get("/me");
 
+// ── Files ─────────────────────────────────────────────────────────────────────
 export const uploadFiles = (files, onProgress) => {
   const form = new FormData();
   files.forEach((f) => form.append("files", f));
