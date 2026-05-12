@@ -4,6 +4,7 @@ import UploadZone from "./components/UploadZone";
 import FileList from "./components/FileList";
 import Toast from "./components/Toast";
 import LoginScreen from "./components/LoginScreen";
+import SystemInfo from "./components/SystemInfo";
 import {
   uploadFiles,
   listFiles,
@@ -16,6 +17,7 @@ import {
 export default function App() {
   const [authed, setAuthed] = useState(false);
   const [authReady, setAuthReady] = useState(false);
+  const [tab, setTab] = useState("files");
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -108,6 +110,20 @@ export default function App() {
             <span className="logo-icon">▣</span>
             <span className="logo-text"> My VAULT</span>
           </div>
+          <nav className="tab-bar">
+            <button
+              className={`tab-btn ${tab === "files" ? "tab-active" : ""}`}
+              onClick={() => setTab("files")}
+            >
+              Files
+            </button>
+            <button
+              className={`tab-btn ${tab === "system" ? "tab-active" : ""}`}
+              onClick={() => setTab("system")}
+            >
+              System
+            </button>
+          </nav>
           <div className="header-right">
             <span className="file-count">
               {loading ? "—" : files.length} file{files.length !== 1 ? "s" : ""}
@@ -136,48 +152,59 @@ export default function App() {
       </header>
 
       <main className="app-main">
-        <section className="section">
-          <h2 className="section-label">Upload</h2>
-          <UploadZone
-            onFilesSelected={handleUpload}
-            uploading={uploading}
-            progress={progress}
-          />
-        </section>
+        {tab === "files" && (
+          <>
+            <section className="section">
+              <h2 className="section-label">Upload</h2>
+              <UploadZone
+                onFilesSelected={handleUpload}
+                uploading={uploading}
+                progress={progress}
+              />
+            </section>
 
-        <section className="section">
-          <h2 className="section-label">
-            Stored Files
-            {!loading && (
-              <button
-                className="refresh-btn"
-                onClick={fetchFiles}
-                title="Refresh"
-              >
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <polyline points="23 4 23 10 17 10" />
-                  <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" />
-                </svg>
-              </button>
-            )}
-          </h2>
-          {loading ? (
-            <div className="loading-state">
-              <span className="loading-dot" />
-              <span className="loading-dot" />
-              <span className="loading-dot" />
-            </div>
-          ) : (
-            <FileList files={files} onDelete={handleDelete} />
-          )}
-        </section>
+            <section className="section">
+              <h2 className="section-label">
+                Stored Files
+                {!loading && (
+                  <button
+                    className="refresh-btn"
+                    onClick={fetchFiles}
+                    title="Refresh"
+                  >
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
+                      <polyline points="23 4 23 10 17 10" />
+                      <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" />
+                    </svg>
+                  </button>
+                )}
+              </h2>
+              {loading ? (
+                <div className="loading-state">
+                  <span className="loading-dot" />
+                  <span className="loading-dot" />
+                  <span className="loading-dot" />
+                </div>
+              ) : (
+                <FileList files={files} onDelete={handleDelete} />
+              )}
+            </section>
+          </>
+        )}
+
+        {tab === "system" && (
+          <section className="section">
+            <h2 className="section-label">System Information</h2>
+            <SystemInfo />
+          </section>
+        )}
       </main>
 
       <footer className="app-footer">

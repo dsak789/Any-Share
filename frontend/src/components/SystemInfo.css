@@ -1,0 +1,154 @@
+.si-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+/* Card */
+.si-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.si-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+
+.si-card-icon {
+  font-size: 0.9rem;
+}
+
+.si-card-title {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+}
+
+.si-card-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Row */
+.si-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.si-label {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--text-mid);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.si-value {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text);
+  text-align: right;
+  word-break: break-all;
+}
+
+.si-accent {
+  color: var(--accent);
+}
+
+/* Meter */
+.si-meter-wrap {
+  margin-top: 4px;
+}
+
+.si-meter {
+  position: relative;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.si-meter-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.si-meter-fill.si-meter-warn {
+  background: var(--red);
+}
+
+.si-meter-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--text-mid);
+  margin-top: 4px;
+  text-align: right;
+}
+
+/* Refresh row */
+.si-refresh-row {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.si-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--border-hi);
+  border-radius: var(--radius);
+  color: var(--text-mid);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.si-refresh-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* States */
+.si-loading {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  padding: 40px;
+}
+
+.si-error {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--red);
+  padding: 16px 0;
+}
+
+.si-empty {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--text-low);
+}

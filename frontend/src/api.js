@@ -23,3 +23,4 @@ export const uploadFiles = (files, onProgress) => {
 export const listFiles = () => api.get("/files");
 export const deleteFile = (id) => api.delete(`/files/${id}`);
 export const downloadUrl = (id) => `http://localhost:5000/api/download/${id}`;
+export const getSystemInfo = () => api.get("/system");

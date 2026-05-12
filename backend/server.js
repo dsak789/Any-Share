@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
 const { v4: uuidv4 } = require("uuid");
 const multer = require("multer");
 const crypto = require("crypto");
@@ -180,6 +181,66 @@ app.delete("/api/files/:id", requireAuth, (req, res) => {
 app.get("/", (req, res) => {
   res.status(200).json("My Vault API");
 });
+
+// ── System info route ────────────────────────────────────────────────────────
+app.get("/api/system", requireAuth, (_req, res) => {
+  // ── OS details ──
+  const cpus = os.cpus();
+  const totalMem = os.totalmem();
+  const freeMem = os.freemem();
+  const usedMem = totalMem - freeMem;
+
+  // ── Uploads folder size ──
+  let uploadBytes = 0;
+  try {
+    fs.readdirSync(UPLOADS_DIR).forEach((f) => {
+      try {
+        const s = fs.statSync(path.join(UPLOADS_DIR, f));
+        if (s.isFile()) uploadBytes += s.size;
+      } catch (_) {}
+    });
+  } catch (_) {}
+
+  // ── Network interfaces (IPv4 only, skip loopback) ──
+  const nets = os.networkInterfaces();
+  const ifaces = [];
+  Object.entries(nets).forEach(([name, addrs]) => {
+    (addrs || []).forEach((a) => {
+      if (a.family === "IPv4" && !a.internal)
+        ifaces.push({ name, address: a.address });
+    });
+  });
+
+  res.json({
+    os: {
+      platform: os.platform(), // win32, linux, darwin …
+      release: os.release(),
+      arch: os.arch(),
+      hostname: os.hostname(),
+      uptime: os.uptime(), // seconds
+      type: os.type(),
+    },
+    cpu: {
+      model: cpus[0]?.model || "Unknown",
+      cores: cpus.length,
+      speedMHz: cpus[0]?.speed || 0,
+    },
+    memory: {
+      totalBytes: totalMem,
+      usedBytes: usedMem,
+      freeBytes: freeMem,
+      usedPercent: Math.round((usedMem / totalMem) * 100),
+    },
+    storage: {
+      uploadDirBytes: uploadBytes,
+      fileCount: Object.keys(fileMetadata).length,
+    },
+    network: { interfaces: ifaces },
+    node: process.version,
+    pid: process.pid,
+  });
+});
+
 // ── Start ───────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`🗄  Vault API  →  http://localhost:${PORT}`);
