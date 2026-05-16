@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import Footer from "../components/Footer";
 
 export default function AuthPage() {
   const [mode, setMode] = useState("login"); // "login" | "register"
@@ -125,7 +126,27 @@ export default function AuthPage() {
             {mode === "login" ? "Register" : "Sign in"}
           </button>
         </p>
+
+        <p
+          className="text-sm text-muted"
+          style={{ textAlign: "center", marginTop: 12 }}
+        >
+          <button
+            onClick={() => navigate("/about")}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--text3)",
+              fontFamily: "inherit",
+              fontSize: 12,
+            }}
+          >
+            What is AnyShare?
+          </button>
+        </p>
       </div>
+      {/* <Footer minimal /> */}
     </div>
   );
 }
