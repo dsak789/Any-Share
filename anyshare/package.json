@@ -1,0 +1,12 @@
+{
+  "name": "filevault",
+  "version": "1.0.0",
+  "description": "File vault with DynamoDB, JWT auth, and PIN sharing",
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "i-a": "cd backend && npm install && cd ../frontend && npm install",
+    "dev:api": "cd backend && npm run dev",
+    "dev:webapp": "cd frontend && npm start",
+    "build:webapp": "cd frontend && npm run build"
+  }
+}
