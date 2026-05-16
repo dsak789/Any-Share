@@ -50,6 +50,8 @@ app.use("/api/auth/register", authLimiter);
 app.use("/api/auth", authRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/shares", shareRoutes);
+// Public (no-auth) share endpoints exposed under /api/public
+app.use("/api/public", shareRoutes);
 
 // Health check
 app.get("/api/health", (req, res) =>

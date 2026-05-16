@@ -171,6 +171,47 @@ router.get("/:fileId/download", authenticate, async (req, res) => {
   }
 });
 
+// GET /api/files/:fileId/preview — stream file inline for in-browser preview (owner or grantee)
+router.get("/:fileId/preview", authenticate, async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    const userId = req.user.userId;
+
+    const fileResult = await docClient.send(
+      new GetCommand({ TableName: TABLES.FILES, Key: { fileId } })
+    );
+    if (!fileResult.Item) return res.status(404).json({ error: "File not found" });
+
+    const file = fileResult.Item;
+
+    let hasAccess = file.ownerId === userId;
+    if (!hasAccess) {
+      const shareResult = await docClient.send(
+        new GetCommand({ TableName: TABLES.SHARES, Key: { fileId, granteeId: userId } })
+      );
+      hasAccess = !!shareResult.Item;
+    }
+    if (!hasAccess) return res.status(403).json({ error: "Access denied" });
+
+    // Inline disposition so browser renders it rather than downloading
+    res.setHeader("Content-Disposition", `inline; filename="${file.originalName}"`);
+    res.setHeader("Content-Type", file.mimeType || "application/octet-stream");
+
+    if (file.storageType === "disk") {
+      if (!fs.existsSync(file.storagePath))
+        return res.status(404).json({ error: "File not found on disk" });
+      return res.sendFile(path.resolve(file.storagePath));
+    }
+
+    const buffer = Buffer.from(file.content, "base64");
+    res.setHeader("Content-Length", buffer.length);
+    res.send(buffer);
+  } catch (err) {
+    console.error("Preview error:", err);
+    res.status(500).json({ error: "Preview failed" });
+  }
+});
+
 // DELETE /api/files/:fileId
 router.delete("/:fileId", authenticate, async (req, res) => {
   try {

@@ -45,7 +45,7 @@ code, .mono { font-family: 'JetBrains Mono', monospace; }
 }
 
 .sidebar {
-  width: 270px;
+  width: 240px;
   background: var(--surface);
   border-right: 1px solid var(--border);
   display: flex;
@@ -57,7 +57,7 @@ code, .mono { font-family: 'JetBrains Mono', monospace; }
 }
 
 .main-content {
-  margin-left: 270px;
+  margin-left: 240px;
   flex: 1;
   padding: 40px;
   max-width: 1200px;
@@ -233,7 +233,7 @@ code, .mono { font-family: 'JetBrains Mono', monospace; }
   letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--text3);
-  padding: 0 16px 12px;
+  padding: 15px 16px 12px;
   border-bottom: 1px solid var(--border);
 }
 .file-table td {
@@ -400,4 +400,114 @@ code, .mono { font-family: 'JetBrains Mono', monospace; }
 @media (max-width: 768px) {
   .sidebar { display: none; }
   .main-content { margin-left: 0; padding: 20px; }
+}
+
+/* ── Mobile top bar ── */
+.mobile-topbar {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  z-index: 200;
+  padding: 0 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ── Hamburger button ── */
+.hamburger-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+}
+.hamburger-btn span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+/* ── Hamburger drawer ── */
+.hamburger-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 300;
+}
+.hamburger-menu {
+  display: none;
+  position: fixed;
+  top: 0; right: -280px;
+  width: 280px;
+  height: 100vh;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  z-index: 400;
+  transition: right 0.25s cubic-bezier(0.4,0,0.2,1);
+  overflow-y: auto;
+}
+.hamburger-menu.open { right: 0; }
+
+/* ── Responsive overrides ── */
+@media (max-width: 768px) {
+  .sidebar { display: none !important; }
+
+  .mobile-topbar { display: flex; }
+  .hamburger-overlay { display: block; }
+  .hamburger-menu { display: block; }
+
+  .main-content {
+    margin-left: 0 !important;
+    padding: 80px 16px 24px !important;
+  }
+
+  .page-title { font-size: 22px; }
+
+  /* Stack page header buttons below on mobile */
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+
+  /* Scrollable tables on mobile */
+  .card { overflow-x: auto; }
+  .file-table { min-width: 600px; }
+
+  /* Modal full-width on mobile */
+  .modal { padding: 20px; }
+  .modal-overlay { padding: 12px; align-items: flex-end !important; }
+  .modal { border-radius: 16px 16px 0 0; max-width: 100% !important; }
+
+  /* Auth card full width */
+  .auth-card { padding: 24px; }
+
+  /* Hide some table columns on very small screens */
+  .hide-mobile { display: none; }
+
+  /* Upload zone smaller padding */
+  .upload-zone { padding: 28px 16px; }
+
+  /* PIN digits smaller on mobile */
+  .pin-digit { width: 36px; height: 48px; font-size: 20px; }
+
+  /* Grid to single column */
+  .share-grid { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 480px) {
+  .file-table th:nth-child(3),
+  .file-table td:nth-child(3),
+  .file-table th:nth-child(4),
+  .file-table td:nth-child(4) { display: none; }
 }

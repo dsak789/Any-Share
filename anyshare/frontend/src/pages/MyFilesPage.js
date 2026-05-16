@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { listMyFiles, downloadFile, deleteFile } from "../utils/api";
 import { formatBytes, formatDate, fileIcon, triggerDownload } from "../utils/fileUtils";
 import ShareModal from "../components/ShareModal";
+import FilePreviewModal from "../components/FilePreviewModal";
 
 export default function MyFilesPage() {
   const [files, setFiles] = useState([]);
@@ -11,6 +12,7 @@ export default function MyFilesPage() {
   const [downloading, setDownloading] = useState({});
   const [deleting, setDeleting] = useState({});
   const [shareTarget, setShareTarget] = useState(null);
+  const [previewTarget, setPreviewTarget] = useState(null);
   const navigate = useNavigate();
 
   const load = useCallback(async () => {
@@ -31,11 +33,8 @@ export default function MyFilesPage() {
     try {
       const res = await downloadFile(file.fileId);
       triggerDownload(res.data, file.originalName);
-    } catch {
-      alert("Download failed");
-    } finally {
-      setDownloading((d) => ({ ...d, [file.fileId]: false }));
-    }
+    } catch { alert("Download failed"); }
+    finally { setDownloading((d) => ({ ...d, [file.fileId]: false })); }
   };
 
   const handleDelete = async (file) => {
@@ -44,11 +43,8 @@ export default function MyFilesPage() {
     try {
       await deleteFile(file.fileId);
       setFiles((f) => f.filter((x) => x.fileId !== file.fileId));
-    } catch {
-      alert("Delete failed");
-    } finally {
-      setDeleting((d) => ({ ...d, [file.fileId]: false }));
-    }
+    } catch { alert("Delete failed"); }
+    finally { setDeleting((d) => ({ ...d, [file.fileId]: false })); }
   };
 
   return (
@@ -67,28 +63,19 @@ export default function MyFilesPage() {
 
       <div className="card" style={{ padding: 0, overflow: "hidden" }}>
         {loading ? (
-          <div className="empty-state">
-            <div className="empty-icon">⏳</div>
-            <div className="empty-title">Loading…</div>
-          </div>
+          <div className="empty-state"><div className="empty-icon">⏳</div><div className="empty-title">Loading…</div></div>
         ) : files.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">📭</div>
             <div className="empty-title">No files yet</div>
             <div className="empty-desc">Upload your first file to get started.</div>
-            <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => navigate("/upload")}>
-              Upload now
-            </button>
+            <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => navigate("/upload")}>Upload now</button>
           </div>
         ) : (
           <table className="file-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Size</th>
-                <th>Storage</th>
-                <th>Uploaded</th>
-                <th style={{ textAlign: "right" }}>Actions</th>
+                <th>Name</th><th>Size</th><th>Storage</th><th>Uploaded</th><th style={{ textAlign: "right" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -109,21 +96,12 @@ export default function MyFilesPage() {
                   <td className="text-muted text-sm">{formatDate(file.uploadedAt)}</td>
                   <td>
                     <div className="actions-row">
-                      <button
-                        className="btn btn-ghost btn-sm"
-                        onClick={() => handleDownload(file)}
-                        disabled={downloading[file.fileId]}>
-                        {downloading[file.fileId] ? "…" : "⬇️ Download"}
+                      <button className="btn btn-ghost btn-sm" onClick={() => setPreviewTarget(file)}>👁 Preview</button>
+                      <button className="btn btn-ghost btn-sm" onClick={() => handleDownload(file)} disabled={downloading[file.fileId]}>
+                        {downloading[file.fileId] ? "…" : "⬇️"}
                       </button>
-                      <button
-                        className="btn btn-ghost btn-sm"
-                        onClick={() => setShareTarget(file)}>
-                        🔗 Share
-                      </button>
-                      <button
-                        className="btn btn-danger btn-sm"
-                        onClick={() => handleDelete(file)}
-                        disabled={deleting[file.fileId]}>
+                      <button className="btn btn-ghost btn-sm" onClick={() => setShareTarget(file)}>🔗 Share</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => handleDelete(file)} disabled={deleting[file.fileId]}>
                         {deleting[file.fileId] ? "…" : "🗑️"}
                       </button>
                     </div>
@@ -135,9 +113,8 @@ export default function MyFilesPage() {
         )}
       </div>
 
-      {shareTarget && (
-        <ShareModal file={shareTarget} onClose={() => setShareTarget(null)} />
-      )}
+      {shareTarget && <ShareModal file={shareTarget} onClose={() => setShareTarget(null)} />}
+      {previewTarget && <FilePreviewModal file={previewTarget} onClose={() => setPreviewTarget(null)} />}
     </div>
   );
 }

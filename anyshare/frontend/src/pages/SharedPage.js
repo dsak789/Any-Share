@@ -1,12 +1,19 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { listSharedFiles, downloadFile } from "../utils/api";
-import { formatBytes, formatDate, fileIcon, triggerDownload } from "../utils/fileUtils";
+import {
+  formatBytes,
+  formatDate,
+  fileIcon,
+  triggerDownload,
+} from "../utils/fileUtils";
+import FilePreviewModal from "../components/FilePreviewModal";
 
 export default function SharedPage() {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [downloading, setDownloading] = useState({});
+  const [previewTarget, setPreviewTarget] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -19,7 +26,9 @@ export default function SharedPage() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const handleDownload = async (file) => {
     setDownloading((d) => ({ ...d, [file.fileId]: true }));
@@ -44,12 +53,17 @@ export default function SharedPage() {
 
       <div className="card" style={{ padding: 0, overflow: "hidden" }}>
         {loading ? (
-          <div className="empty-state"><div className="empty-icon">⏳</div><div className="empty-title">Loading…</div></div>
+          <div className="empty-state">
+            <div className="empty-icon">⏳</div>
+            <div className="empty-title">Loading…</div>
+          </div>
         ) : files.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">🤝</div>
             <div className="empty-title">No shared files</div>
-            <div className="empty-desc">Use a PIN to unlock access to files shared with you.</div>
+            <div className="empty-desc">
+              Use a PIN to unlock access to files shared with you.
+            </div>
           </div>
         ) : (
           <table className="file-table">
@@ -67,19 +81,33 @@ export default function SharedPage() {
                 <tr key={file.fileId}>
                   <td>
                     <div className="flex items-center gap-2">
-                      <span className="file-icon">{fileIcon(file.mimeType, file.originalName)}</span>
+                      <span className="file-icon">
+                        {fileIcon(file.mimeType, file.originalName)}
+                      </span>
                       <span className="file-name">{file.originalName}</span>
                     </div>
                   </td>
-                  <td><span className="file-size">{formatBytes(file.size)}</span></td>
+                  <td>
+                    <span className="file-size">{formatBytes(file.size)}</span>
+                  </td>
                   <td className="text-muted text-sm">{file.ownerName}</td>
-                  <td className="text-muted text-sm">{formatDate(file.shareGrantedAt)}</td>
+                  <td className="text-muted text-sm">
+                    {formatDate(file.shareGrantedAt)}
+                  </td>
                   <td>
                     <div className="actions-row">
                       <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => setPreviewTarget(file)}
+                      >
+                        👁 Preview
+                      </button>
+
+                      <button
                         className="btn btn-primary btn-sm"
                         onClick={() => handleDownload(file)}
-                        disabled={downloading[file.fileId]}>
+                        disabled={downloading[file.fileId]}
+                      >
                         {downloading[file.fileId] ? "…" : "⬇️ Download"}
                       </button>
                     </div>
@@ -90,6 +118,12 @@ export default function SharedPage() {
           </table>
         )}
       </div>
+      {previewTarget && (
+        <FilePreviewModal
+          file={previewTarget}
+          onClose={() => setPreviewTarget(null)}
+        />
+      )}
     </div>
   );
 }

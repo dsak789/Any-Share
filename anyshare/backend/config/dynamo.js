@@ -1,10 +1,5 @@
-const {
-  DynamoDBClient,
-  CreateTableCommand,
-  DescribeTableCommand,
-} = require("@aws-sdk/client-dynamodb");
+const { DynamoDBClient, CreateTableCommand, DescribeTableCommand } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient } = require("@aws-sdk/lib-dynamodb");
-require("dotenv").config();
 
 const client = new DynamoDBClient({
   region: process.env.AWS_REGION || "us-east-1",
@@ -22,6 +17,7 @@ const TABLES = {
   USERS: process.env.DYNAMO_USERS_TABLE || "as_users",
   FILES: process.env.DYNAMO_FILES_TABLE || "as_files",
   SHARES: process.env.DYNAMO_SHARES_TABLE || "as_shares",
+  LINK_SHARES: process.env.DYNAMO_LINK_SHARES_TABLE || "as_link_shares",
 };
 
 const tableDefinitions = [
@@ -68,18 +64,35 @@ const tableDefinitions = [
     AttributeDefinitions: [
       { AttributeName: "fileId", AttributeType: "S" },
       { AttributeName: "granteeId", AttributeType: "S" },
-      { AttributeName: "pin", AttributeType: "S" },
+      { AttributeName: "granteeEmail", AttributeType: "S" },
     ],
     GlobalSecondaryIndexes: [
       {
-        IndexName: "pin-index",
-        KeySchema: [{ AttributeName: "pin", KeyType: "HASH" }],
+        IndexName: "grantee-index",
+        KeySchema: [{ AttributeName: "granteeId", KeyType: "HASH" }],
         Projection: { ProjectionType: "ALL" },
         ProvisionedThroughput: { ReadCapacityUnits: 5, WriteCapacityUnits: 5 },
       },
       {
-        IndexName: "grantee-index",
-        KeySchema: [{ AttributeName: "granteeId", KeyType: "HASH" }],
+        IndexName: "granteeEmail-index",
+        KeySchema: [{ AttributeName: "granteeEmail", KeyType: "HASH" }],
+        Projection: { ProjectionType: "ALL" },
+        ProvisionedThroughput: { ReadCapacityUnits: 5, WriteCapacityUnits: 5 },
+      },
+    ],
+    ProvisionedThroughput: { ReadCapacityUnits: 5, WriteCapacityUnits: 5 },
+  },
+  {
+    TableName: TABLES.LINK_SHARES,
+    KeySchema: [{ AttributeName: "linkId", KeyType: "HASH" }],
+    AttributeDefinitions: [
+      { AttributeName: "linkId", AttributeType: "S" },
+      { AttributeName: "ownerId", AttributeType: "S" },
+    ],
+    GlobalSecondaryIndexes: [
+      {
+        IndexName: "owner-links-index",
+        KeySchema: [{ AttributeName: "ownerId", KeyType: "HASH" }],
         Projection: { ProjectionType: "ALL" },
         ProvisionedThroughput: { ReadCapacityUnits: 5, WriteCapacityUnits: 5 },
       },
@@ -100,18 +113,16 @@ async function tableExists(tableName) {
 
 async function initializeTables() {
   console.log("🔧 Initializing DynamoDB tables...");
-
   for (const def of tableDefinitions) {
     const exists = await tableExists(def.TableName);
     if (!exists) {
-      await client
-        .send(new CreateTableCommand(def));
-      console.log(`  ✅ Created table: ${def.TableName}`);
+      await client.send(new CreateTableCommand(def));
+      console.log("  Created table: " + def.TableName);
     } else {
-      console.log(`  ✓  Table exists: ${def.TableName}`);
+      console.log("  Table exists: " + def.TableName);
     }
   }
-  console.log("✅ DynamoDB ready\n");
+  console.log("DynamoDB ready\n");
 }
 
 module.exports = { docClient, TABLES, initializeTables };
