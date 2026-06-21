@@ -17,7 +17,6 @@ export default function Sidebar() {
   return (
     <div className="sidebar">
       <div className="logo">
-        <div className="logo-icon">🔐</div>
         <span className="logo-text">AnyShare</span>
       </div>
 

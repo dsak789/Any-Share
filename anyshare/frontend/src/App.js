@@ -9,6 +9,7 @@ import UploadPage from "./pages/UploadPage";
 import ManageSharesPage from "./pages/ManageSharesPage";
 import PublicSharePage from "./pages/PublicSharePage";
 import AboutPage from "./pages/AboutPage";
+import SystemInfoPage from "./components/SystemInfoPage";
 import "./index.css";
 
 export default function App() {
@@ -51,6 +52,14 @@ export default function App() {
             element={
               <ProtectedLayout>
                 <ManageSharesPage />
+              </ProtectedLayout>
+            }
+          />
+          <Route
+            path="/systeminfo"
+            element={
+              <ProtectedLayout>
+                <SystemInfoPage />
               </ProtectedLayout>
             }
           />

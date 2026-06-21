@@ -20,7 +20,7 @@ api.interceptors.response.use(
       window.location.href = "/login";
     }
     return Promise.reject(err);
-  }
+  },
 );
 
 const BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
@@ -34,7 +34,8 @@ export const getMe = () => api.get("/api/auth/me");
 export const uploadFile = (formData, onProgress) =>
   api.post("/api/files/upload", formData, {
     headers: { "Content-Type": "multipart/form-data" },
-    onUploadProgress: (e) => onProgress && onProgress(Math.round((e.loaded / e.total) * 100)),
+    onUploadProgress: (e) =>
+      onProgress && onProgress(Math.round((e.loaded / e.total) * 100)),
   });
 
 export const listMyFiles = () => api.get("/api/files");
@@ -55,13 +56,18 @@ export const revokeEmailShare = (fileId, granteeId) =>
 // ── Link Shares (anonymous / public) ─────────────────────────────────────────
 export const createLinkShare = (data) => api.post("/api/shares/link", data);
 export const listMyLinks = () => api.get("/api/shares/my-links");
-export const deleteLinkShare = (linkId) => api.delete(`/api/shares/link/${linkId}`);
+export const deleteLinkShare = (linkId) =>
+  api.delete(`/api/shares/link/${linkId}`);
 
 // ── Public (no auth needed) ───────────────────────────────────────────────────
-export const getPublicLinkInfo = (linkId) => api.get(`/api/public/public/${linkId}`);
+export const getPublicLinkInfo = (linkId) =>
+  api.get(`/api/public/public/${linkId}`);
 export const verifyPublicPin = (linkId, pin) =>
   api.post(`/api/public/public/${linkId}/verify`, { pin });
 export const publicDownloadUrl = (linkId, pin) =>
   `${BASE}/api/public/public/${linkId}/download?pin=${encodeURIComponent(pin)}`;
+
+// ── Private (auth needed) ───────────────────────────────────────────────────
+export const getSystemInfo = () => api.get("/api/systeminfo");
 
 export default api;
