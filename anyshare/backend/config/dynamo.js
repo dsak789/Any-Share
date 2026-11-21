@@ -1,19 +1,29 @@
-const { DynamoDBClient, CreateTableCommand, DescribeTableCommand } = require("@aws-sdk/client-dynamodb");
+const {
+  DynamoDBClient,
+  CreateTableCommand,
+  DescribeTableCommand,
+} = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient } = require("@aws-sdk/lib-dynamodb");
 
-const client = new DynamoDBClient({
-  region:   process.env.AWS_REGION || "us-east-1",
-  endpoint: process.env.DYNAMO_ENDPOINT || undefined,
-  // region again below — remove this line || "us-east-1",
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
+const SKIP = process.env.SKIP_DYNAMO === "true";
 
-const docClient = DynamoDBDocumentClient.from(client, {
-  marshallOptions: { removeUndefinedValues: true },
-});
+const client = SKIP
+  ? null
+  : new DynamoDBClient({
+      region: process.env.AWS_REGION || "us-east-1",
+      endpoint: process.env.DYNAMO_ENDPOINT || undefined,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      },
+    });
+
+// When SKIP_DYNAMO=true, return a no-op mock so routes don't crash
+const docClient = SKIP
+  ? { send: async () => ({ Items: [], Count: 0, Item: undefined }) }
+  : DynamoDBDocumentClient.from(client, {
+      marshallOptions: { removeUndefinedValues: true },
+    });
 
 const TABLES = {
   USERS: process.env.DYNAMO_USERS_TABLE || "as_users",
@@ -114,6 +124,12 @@ async function tableExists(tableName) {
 }
 
 async function initializeTables() {
+  if (SKIP) {
+    console.log(
+      "⚠️  DynamoDB skipped (SKIP_DYNAMO=true) — running in local-dev mode",
+    );
+    return;
+  }
   console.log("🔧 Initializing DynamoDB tables...");
   for (const def of tableDefinitions) {
     const exists = await tableExists(def.TableName);

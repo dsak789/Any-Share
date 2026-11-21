@@ -12,6 +12,9 @@ const { initializeTables } = require("./config/dynamo");
 const authRoutes = require("./routes/auth");
 const fileRoutes = require("./routes/files");
 const shareRoutes = require("./routes/shares");
+const http = require("http");
+const { Server: SocketServer } = require("socket.io");
+const { router: localShareRoutes, sessions } = require("./routes/localshare");
 
 const app = express();
 const PORT = process.env.PORT || 9999;
@@ -52,6 +55,7 @@ app.use("/api/auth/register", authLimiter);
 // ── Routes ──────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
 app.use("/api/files", fileRoutes);
+app.use("/api/localshare", localShareRoutes);
 app.use("/api/shares", shareRoutes);
 // Public (no-auth) share endpoints exposed under /api/public
 app.use("/api/public", shareRoutes);
@@ -314,8 +318,67 @@ app.get("/api/systeminfo", async (_req, res) => {
 async function start() {
   try {
     await initializeTables();
-    app.listen(PORT, () => {
-      console.log(`🚀 FileVault server running on http://localhost:${PORT}`);
+    const httpServer = http.createServer(app);
+
+    const io = new SocketServer(httpServer, {
+      cors: {
+        origin: process.env.FRONTEND_URL || "http://localhost:3000",
+        methods: ["GET", "POST"],
+      },
+    });
+
+    // ── WebRTC Signaling ──────────────────────────────────────────────────────────
+    io.on("connection", (socket) => {
+      // Sender joins their session room
+      socket.on("host-session", ({ sessionId }) => {
+        const session = sessions.get(sessionId);
+        if (!session)
+          return socket.emit("error", { message: "Session not found" });
+        session.hostSocketId = socket.id;
+        socket.join(sessionId);
+        socket.emit("hosting", { sessionId });
+      });
+
+      // Receiver joins the session room
+      socket.on("join-session", ({ sessionId }) => {
+        const session = sessions.get(sessionId);
+        if (!session)
+          return socket.emit("error", {
+            message: "Session not found or expired",
+          });
+        if (session.done)
+          return socket.emit("error", {
+            message: "Transfer already completed",
+          });
+        session.guestSocketId = socket.id;
+        socket.join(sessionId);
+        // Tell sender a guest arrived
+        socket.to(sessionId).emit("guest-joined", { guestId: socket.id });
+      });
+
+      // Relay WebRTC offer (sender → receiver)
+      socket.on("offer", ({ sessionId, offer }) => {
+        socket.to(sessionId).emit("offer", { offer });
+      });
+
+      // Relay WebRTC answer (receiver → sender)
+      socket.on("answer", ({ sessionId, answer }) => {
+        socket.to(sessionId).emit("answer", { answer });
+      });
+
+      // Relay ICE candidates (both directions)
+      socket.on("ice-candidate", ({ sessionId, candidate }) => {
+        socket.to(sessionId).emit("ice-candidate", { candidate });
+      });
+
+      // Transfer done signal
+      socket.on("transfer-done", ({ sessionId }) => {
+        socket.to(sessionId).emit("transfer-done");
+      });
+    });
+
+    httpServer.listen(PORT, () => {
+      console.log(`🚀 AnyShare server running on http://localhost:${PORT}`);
     });
   } catch (err) {
     console.error("❌ Failed to start server:", err);
