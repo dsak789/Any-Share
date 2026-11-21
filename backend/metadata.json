@@ -1,1 +1,42 @@
-{}
+{
+  "8ed19462-19e2-4a05-9159-841d6b7de4d8": {
+    "id": "8ed19462-19e2-4a05-9159-841d6b7de4d8",
+    "originalName": "dev_as_files.csv",
+    "storedName": "8ed19462-19e2-4a05-9159-841d6b7de4d8.csv",
+    "size": 1642954,
+    "mimeType": "text/csv",
+    "uploadedAt": "2026-10-03T00:19:59.081Z"
+  },
+  "21f468e9-5ee9-49ac-9bc8-9e1c73c4a1d7": {
+    "id": "21f468e9-5ee9-49ac-9bc8-9e1c73c4a1d7",
+    "originalName": "dev-dsak_credentials.csv",
+    "storedName": "21f468e9-5ee9-49ac-9bc8-9e1c73c4a1d7.csv",
+    "size": 117,
+    "mimeType": "text/csv",
+    "uploadedAt": "2026-10-03T00:20:54.697Z"
+  },
+  "1653cda4-2b02-4596-a5e1-2d61b002e3a4": {
+    "id": "1653cda4-2b02-4596-a5e1-2d61b002e3a4",
+    "originalName": "dev_as_users.csv",
+    "storedName": "1653cda4-2b02-4596-a5e1-2d61b002e3a4.csv",
+    "size": 747,
+    "mimeType": "text/csv",
+    "uploadedAt": "2026-10-03T00:20:54.697Z"
+  },
+  "9fa4e26e-0d10-43b2-b336-835beb5182a8": {
+    "id": "9fa4e26e-0d10-43b2-b336-835beb5182a8",
+    "originalName": "as_link_shares.csv",
+    "storedName": "9fa4e26e-0d10-43b2-b336-835beb5182a8.csv",
+    "size": 1253,
+    "mimeType": "text/csv",
+    "uploadedAt": "2026-10-03T00:20:54.697Z"
+  },
+  "62a54e11-f030-467a-bf98-34f10874b807": {
+    "id": "62a54e11-f030-467a-bf98-34f10874b807",
+    "originalName": "dev_as_shares.csv",
+    "storedName": "62a54e11-f030-467a-bf98-34f10874b807.csv",
+    "size": 2425,
+    "mimeType": "text/csv",
+    "uploadedAt": "2026-10-03T00:20:54.697Z"
+  }
+}
