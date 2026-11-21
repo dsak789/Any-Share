@@ -10,6 +10,7 @@ import ManageSharesPage from "./pages/ManageSharesPage";
 import PublicSharePage from "./pages/PublicSharePage";
 import AboutPage from "./pages/AboutPage";
 import SystemInfoPage from "./components/SystemInfoPage";
+import LocalSharePage from "./pages/LocalSharePage";
 import "./index.css";
 
 export default function App() {
@@ -21,6 +22,8 @@ export default function App() {
           <Route path="/authentication" element={<AuthPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/share/:linkId" element={<PublicSharePage />} />
+          <Route path="/local-share" element={<LocalSharePage />} />
+          <Route path="/local-share/:sessionId" element={<LocalSharePage />} />
 
           {/* Protected routes */}
           <Route
